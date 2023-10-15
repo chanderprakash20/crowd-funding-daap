@@ -103,6 +103,9 @@ pub mod pallet {
 
 			// Update the Project storage
 			// todo!()
+			// Update the Project storage
+			Project::<T>::insert(project_id, project.clone());
+
 
 			Self::deposit_event(Event::<T>::CrowdFundingInitiated { project });
 
@@ -148,7 +151,7 @@ pub mod pallet {
 				&project.pot_account,
 				amount,
 				ExistenceRequirement::KeepAlive,
-			)?;
+			);
 
 			// dispatch the event
 			Self::deposit_event(Event::<T>::CrowdFundTransfer {
@@ -160,6 +163,8 @@ pub mod pallet {
 
 			// Check if the target amount is reached then change the status of a project.
 			if project.total_fund >= project.target_fund {
+				project.status == false;
+				
 
 				// Update the status
 				// todo!()
@@ -169,13 +174,17 @@ pub mod pallet {
 				// Update the total fund
 				// todo!()
 
-				Self::deposit_event(Event::<T>::CrowdFundWithdrawn {
-					source: project.pot_account.clone(),
-					destination: project.owner.clone(),
-				});
+				T::Currency::transfer(
+					&project.pot_account,
+					&project.owner,
+					project.total_fund,
+					ExistenceRequirement::AllowDeath,
+				)?;
+				project.total_fund = project.total_fund - project.total_fund;
 
 				// Update the storage
 				// todo!()
+				Project::<T>::insert(project_id, project.clone());
 			}
 
 			Ok(())
